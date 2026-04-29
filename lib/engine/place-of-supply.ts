@@ -162,7 +162,7 @@ export function jurisdictionFor(
 ): Jurisdiction {
   if (country !== "ES") return country in EU_COUNTRIES ? "EU" : "ROW";
   if (!region) return "ES.mainland";
-  return (`ES.${region}` as Jurisdiction) ?? "ES.mainland";
+  return `ES.${region}` as Jurisdiction;
 }
 
 export function isSpecialTerritory(region?: Region): boolean {

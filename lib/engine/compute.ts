@@ -34,24 +34,14 @@ export function calculate(tx: Transaction): CalculationResult {
 
   const totals = aggregateTotals(lineResults);
 
-  const invoiceMentions = dedupe(
-    lineResults.flatMap((lr) =>
-      lr.appliedRules.flatMap((ar) =>
-        // We don't carry the rule's invoiceMention separately on AppliedRule (yet);
-        // it surfaces via warnings when needed. Curated rules expose mention in result.
-        [],
-      ),
-    ),
-  );
-
-  // Walk lines a second time to harvest mentions from the rule set (we re-resolve quickly).
+  // Harvest mandatory invoice mentions from the matched rules (deduplicated).
+  const invoiceMentions: string[] = [];
   for (const lr of lineResults) {
     for (const ar of lr.appliedRules) {
       const rule = ALL_RULES.find((r) => r.id === ar.ruleId);
-      if (rule?.result.invoiceMention) {
-        if (!invoiceMentions.includes(rule.result.invoiceMention)) {
-          invoiceMentions.push(rule.result.invoiceMention);
-        }
+      const mention = rule?.result.invoiceMention;
+      if (mention && !invoiceMentions.includes(mention)) {
+        invoiceMentions.push(mention);
       }
     }
   }
@@ -299,10 +289,6 @@ function transactionLevelWarnings(tx: Transaction): string[] {
 /** Spanish round-half-up to 2 decimals (cent-level). */
 export function round2(n: number): number {
   return Math.round((n + Number.EPSILON) * 100) / 100;
-}
-
-function dedupe<T>(arr: T[]): T[] {
-  return [...new Set(arr)];
 }
 
 /** Stable, JSON-derived hash so the audit log can replay deterministically. */
