@@ -258,7 +258,7 @@ export default function Calculator() {
         />
         <ResultPane result={result} tx={tx} classifyState={classifyState} />
       </main>
-      <footer className="px-6 py-4 border-t border-[color:var(--color-separator-soft)] text-[11px] text-[color:var(--color-fg-tertiary)]">
+      <footer className="px-4 sm:px-6 py-3 sm:py-4 border-t border-[color:var(--color-separator-soft)] text-[11px] text-[color:var(--color-fg-tertiary)] leading-relaxed">
         Informational only. Not tax advice. Verify with your tax advisor before issuing invoices. Rules version{" "}
         <span className="num">{result.rulesVersion}</span>.
       </footer>
@@ -291,21 +291,23 @@ function TopBar({
         borderBottom: "1px solid var(--color-separator-soft)",
       }}
     >
-      <div className="px-6 py-3 flex items-center gap-4">
-        <div className="flex items-baseline gap-3">
+      {/* Row 1 — title + version (always visible) */}
+      <div className="px-4 sm:px-6 pt-3 pb-2 sm:py-3 flex items-center gap-3">
+        <div className="flex items-baseline gap-2 sm:gap-3 min-w-0">
           <h1 className="text-[15px] font-semibold tracking-tight">Spain Tax</h1>
-          <span className="text-[11px] text-[color:var(--color-fg-tertiary)] tracking-wide">
+          <span className="hidden sm:inline text-[11px] text-[color:var(--color-fg-tertiary)] tracking-wide whitespace-nowrap">
             IVA · IGIC · IPSI
           </span>
         </div>
         <div className="flex-1" />
-        <div className="flex items-center gap-2">
+        {/* Inline key input on sm+ screens */}
+        <div className="hidden sm:flex items-center gap-2">
           <label className="text-[11px] text-[color:var(--color-fg-tertiary)] tracking-wide">
             OpenAI key
           </label>
           <input
             className="field-input"
-            style={{ width: 240, height: 28, padding: "4px 8px", fontSize: 12 }}
+            style={{ width: 220, height: 28, padding: "4px 8px", fontSize: 12 }}
             type={keyVisible ? "text" : "password"}
             placeholder="sk-…"
             value={apiKey}
@@ -316,14 +318,31 @@ function TopBar({
           <button className="btn btn-ghost" onClick={onToggleVisible} type="button">
             {keyVisible ? "Hide" : "Show"}
           </button>
-          <span
-            className="text-[11px] num"
-            style={{ color: "var(--color-fg-tertiary)" }}
-            title="Rules version in effect"
-          >
-            {rulesVersion}
-          </span>
         </div>
+        <span
+          className="text-[11px] num whitespace-nowrap"
+          style={{ color: "var(--color-fg-tertiary)" }}
+          title="Rules version in effect"
+        >
+          {rulesVersion}
+        </span>
+      </div>
+
+      {/* Row 2 — key input on mobile only */}
+      <div className="sm:hidden px-4 pb-3 flex items-center gap-2">
+        <input
+          className="field-input flex-1"
+          style={{ height: 32, padding: "6px 10px", fontSize: 12 }}
+          type={keyVisible ? "text" : "password"}
+          placeholder="OpenAI key — sk-…"
+          value={apiKey}
+          onChange={(e) => onApiKey(e.target.value)}
+          spellCheck={false}
+          autoComplete="off"
+        />
+        <button className="btn btn-ghost" onClick={onToggleVisible} type="button">
+          {keyVisible ? "Hide" : "Show"}
+        </button>
       </div>
     </header>
   );
@@ -350,10 +369,10 @@ function FormPane(props: {
 
   return (
     <section
-      className="border-r overflow-y-auto"
-      style={{ borderColor: "var(--color-separator-soft)", maxHeight: "calc(100vh - 49px - 49px)" }}
+      className="lg:border-r lg:overflow-y-auto lg:max-h-[calc(100vh-49px-49px)] border-b lg:border-b-0"
+      style={{ borderColor: "var(--color-separator-soft)" }}
     >
-      <div className="p-6 space-y-7">
+      <div className="p-4 sm:p-6 space-y-7">
         {/* Operation */}
         <Section title="Operation">
           <div className="grid grid-cols-2 gap-3">
@@ -531,60 +550,55 @@ function FormPane(props: {
           <div className="space-y-4">
             {tx.lines.map((line, i) => (
               <div key={i} className="space-y-2">
-                <div className="grid grid-cols-12 gap-2">
-                  <div className="col-span-12">
-                    <input
-                      className="field-input"
-                      placeholder='e.g. "wholemeal bread loaf 500g" or "marketing consulting service"'
-                      value={line.description}
-                      onChange={(e) => updateLine(i, { description: e.target.value })}
-                    />
-                  </div>
-                  <div className="col-span-3">
-                    <input
-                      className="field-input num text-right"
-                      type="number"
-                      step="0.01"
-                      min={0}
-                      value={line.quantity}
-                      onChange={(e) => updateLine(i, { quantity: parseFloat(e.target.value) || 0 })}
-                    />
-                  </div>
-                  <div className="col-span-5">
-                    <input
-                      className="field-input num text-right"
-                      type="number"
-                      step="0.01"
-                      min={0}
-                      value={line.unitPriceNet}
-                      onChange={(e) => updateLine(i, { unitPriceNet: parseFloat(e.target.value) || 0 })}
-                      placeholder="Unit price (net)"
-                    />
-                  </div>
-                  <div className="col-span-3 flex items-center justify-end gap-2 text-[12px]">
-                    <span className="num text-[color:var(--color-fg-secondary)]">
-                      €{(line.quantity * line.unitPriceNet).toFixed(2)}
-                    </span>
-                    <button
-                      className="btn btn-ghost btn-danger"
-                      onClick={() => removeLine(i)}
-                      type="button"
-                      title="Remove line"
-                      style={{ padding: "0 6px" }}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <div className="col-span-12">
-                    <ClassificationStrip
-                      line={line}
-                      state={classifyState[i] ?? "idle"}
-                      error={classifyError[i]}
-                      onRetry={() => onClassify(i)}
-                      hasApiKey={hasApiKey}
-                    />
-                  </div>
+                <input
+                  className="field-input"
+                  placeholder='e.g. "wholemeal bread loaf 500g" or "marketing consulting service"'
+                  value={line.description}
+                  onChange={(e) => updateLine(i, { description: e.target.value })}
+                />
+                <div className="flex items-center gap-2">
+                  <input
+                    aria-label="Quantity"
+                    className="field-input num text-right"
+                    style={{ width: 72 }}
+                    type="number"
+                    step="0.01"
+                    min={0}
+                    value={line.quantity}
+                    onChange={(e) => updateLine(i, { quantity: parseFloat(e.target.value) || 0 })}
+                  />
+                  <span className="text-[11px] text-[color:var(--color-fg-tertiary)]">×</span>
+                  <input
+                    aria-label="Unit price (net)"
+                    className="field-input num text-right flex-1 min-w-0"
+                    type="number"
+                    step="0.01"
+                    min={0}
+                    value={line.unitPriceNet}
+                    onChange={(e) => updateLine(i, { unitPriceNet: parseFloat(e.target.value) || 0 })}
+                    placeholder="Unit price"
+                  />
+                  <span className="num text-[12px] text-[color:var(--color-fg-secondary)] whitespace-nowrap">
+                    €{(line.quantity * line.unitPriceNet).toFixed(2)}
+                  </span>
+                  <button
+                    className="btn btn-ghost btn-danger"
+                    onClick={() => removeLine(i)}
+                    type="button"
+                    aria-label="Remove line"
+                    title="Remove line"
+                    style={{ padding: "0 8px", flexShrink: 0 }}
+                  >
+                    ✕
+                  </button>
                 </div>
+                <ClassificationStrip
+                  line={line}
+                  state={classifyState[i] ?? "idle"}
+                  error={classifyError[i]}
+                  onRetry={() => onClassify(i)}
+                  hasApiKey={hasApiKey}
+                />
               </div>
             ))}
           </div>
@@ -743,7 +757,7 @@ function ConfidenceDial({ value, color }: { value: number; color: string }) {
   const pct = Math.max(0, Math.min(1, value));
   const trackBg = "var(--color-separator-soft)";
   return (
-    <div className="flex flex-col items-end gap-1.5" style={{ width: 100 }}>
+    <div className="flex flex-col items-start sm:items-end gap-1.5 w-full sm:w-[100px]">
       <span className="text-[11px] uppercase tracking-wide" style={{ color: "var(--color-fg-tertiary)" }}>
         Confidence
       </span>
@@ -900,7 +914,7 @@ function AIInsight({
 
       {/* LOADING — skeleton */}
       {isLoading && (
-        <div className="mt-3 grid grid-cols-[1fr_auto] gap-x-6 gap-y-3 items-start">
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-x-6 gap-y-4 items-start">
           <div className="space-y-2 min-w-0 w-full">
             <div className="flex items-center gap-2">
               <span className="text-[11px] uppercase tracking-wide" style={{ color: "var(--color-fg-tertiary)" }}>
@@ -935,7 +949,7 @@ function AIInsight({
 
       {/* DONE — hints present */}
       {hasHints && !isLoading && (
-        <div className="mt-3 grid grid-cols-[1fr_auto] gap-x-6 gap-y-3 items-start">
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-x-6 gap-y-4 items-start">
           <div className="space-y-2.5 min-w-0">
             {category && (
               <div className="flex items-center gap-2">
@@ -998,8 +1012,8 @@ function ResultPane({
     : 0;
 
   return (
-    <section className="overflow-y-auto" style={{ maxHeight: "calc(100vh - 49px - 49px)" }}>
-      <div className="p-6 space-y-7">
+    <section className="lg:overflow-y-auto lg:max-h-[calc(100vh-49px-49px)]">
+      <div className="p-4 sm:p-6 space-y-7">
         <div className="flex items-baseline justify-between">
           <div>
             <div className="section-title">Calculation</div>
@@ -1022,8 +1036,11 @@ function ResultPane({
         </div>
 
         {/* Lines */}
-        <div className="border rounded-lg overflow-hidden" style={{ borderColor: "var(--color-separator)" }}>
-          <table className="w-full text-[13px]">
+        <div
+          className="border rounded-lg overflow-x-auto"
+          style={{ borderColor: "var(--color-separator)" }}
+        >
+          <table className="w-full text-[13px]" style={{ minWidth: 560 }}>
             <thead>
               <tr style={{ background: "var(--color-surface-2)" }}>
                 <th className="text-left font-medium px-3 py-2 text-[11px] uppercase tracking-wide text-[color:var(--color-fg-tertiary)]">
@@ -1165,7 +1182,7 @@ function ResultPane({
 
         {/* Totals */}
         <div className="border-t pt-4" style={{ borderColor: "var(--color-separator)" }}>
-          <div className="grid grid-cols-2 gap-y-1.5 max-w-sm ml-auto text-[13px]">
+          <div className="grid grid-cols-2 gap-y-1.5 sm:max-w-sm sm:ml-auto text-[13px]">
             <span className="text-[color:var(--color-fg-secondary)]">Net</span>
             <span className="text-right num">€{result.totals.net.toFixed(2)}</span>
             <span className="text-[color:var(--color-fg-secondary)]">Tax</span>

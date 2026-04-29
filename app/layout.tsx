@@ -12,9 +12,15 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // suppressHydrationWarning silences mismatches caused by browser extensions
+  // (Ember Inspector, Grammarly, dark-mode addons, etc.) that inject
+  // attributes into <html>/<body> before React hydrates. Scoped to the root
+  // shell only — does NOT silence mismatches in your own components.
   return (
-    <html lang="en">
-      <body className="min-h-screen antialiased">{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body className="min-h-screen antialiased" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

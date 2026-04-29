@@ -364,10 +364,10 @@ html, body {
   40%           { opacity: 1;   transform: translateY(-2px); }
 }
 
-/* Subtle status bar at top of pane — shown when any line is classifying. */
+/* Subtle status bar shown when any line is classifying. Not sticky so it
+   sits naturally below the (variable-height) top bar on mobile. */
 .classify-banner {
-  position: sticky;
-  top: 49px;
+  position: relative;
   z-index: 5;
   display: flex;
   align-items: center;
